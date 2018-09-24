@@ -15,19 +15,19 @@ import (
 func NewMutation(
 	space string, model interface{},
 	conn db.IConnection,
-) IMutation {
+) Mutation {
 	return &mutation{space, model, conn}
 }
 
-// mutation implements IMutation
+// mutation implements Mutation
 type mutation struct {
 	s string      // space
 	m interface{} // model
 	c db.IConnection
 }
 
-// IMutation has methods to operate with entity in the database
-type IMutation interface {
+// Mutation has methods to operate with entity in the database
+type Mutation interface {
 	Append() (id string, err error)
 	Update() error
 	Delete() error

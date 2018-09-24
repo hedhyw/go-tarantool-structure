@@ -19,15 +19,15 @@ func (e InvalidEntityError) Error() string {
 	return "Invalid entity "
 }
 
-// getter implements IGetter
+// getter implements Getter
 type getter struct {
 	s string      // space
 	m interface{} // model
 	c interfaces.IConnection
 }
 
-// IGetter is a helper for records getting
-type IGetter interface {
+// Getter is a helper for records getting
+type Getter interface {
 	All(
 		index interface{},
 		val interface{},
@@ -43,7 +43,7 @@ func NewGetter(
 	space string,
 	model interface{},
 	conn interfaces.IConnection,
-) IGetter {
+) Getter {
 	return &getter{space, model, conn}
 }
 
