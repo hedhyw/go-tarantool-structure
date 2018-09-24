@@ -28,7 +28,9 @@ func model() testModel {
 
 func TestModel(t *testing.T) {
 	m := model()
-	g := NewGetter(testSpace, &m, nil)
+	gRaw := NewGetter(testSpace, &m, nil)
+	g, ok := gRaw.(*getter)
+	assert.True(t, ok)
 	parsed, err := g.model(testTuple)
 	assert.Nil(t, err)
 	if parsed, ok := parsed.(*testModel); ok {

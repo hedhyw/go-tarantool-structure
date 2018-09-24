@@ -19,11 +19,23 @@ func (e InvalidEntityError) Error() string {
 	return "Invalid entity "
 }
 
-// Getter is a helper for records getting
-type Getter struct {
+// getter implements IGetter
+type getter struct {
 	s string      // space
 	m interface{} // model
 	c interfaces.IConnection
+}
+
+// IGetter is a helper for records getting
+type IGetter interface {
+	All(
+		index interface{},
+		val interface{},
+		offset uint32,
+		limit uint32,
+	) ([]interface{}, error)
+	FindBy(index interface{}, val interface{}) (interface{}, error)
+	Find(id string) (interface{}, error)
 }
 
 // NewGetter wraps a model with a getter methods
@@ -31,12 +43,12 @@ func NewGetter(
 	space string,
 	model interface{},
 	conn interfaces.IConnection,
-) Getter {
-	return Getter{space, model, conn}
+) IGetter {
+	return &getter{space, model, conn}
 }
 
 // model parses tuple into the model
-func (g Getter) model(t []interface{}) (interface{}, error) {
+func (g getter) model(t []interface{}) (interface{}, error) {
 	var in = map[string]interface{}{}
 	ref := reflect.TypeOf(g.m).Elem()
 
@@ -64,7 +76,7 @@ func (g Getter) model(t []interface{}) (interface{}, error) {
 // All returns records
 //   index of the field
 //   val to find
-func (g Getter) All(
+func (g getter) All(
 	index interface{},
 	val interface{},
 	offset uint32,
@@ -92,7 +104,7 @@ func (g Getter) All(
 
 // FindBy record
 // select record with a specific value
-func (g Getter) FindBy(index interface{}, val interface{}) (interface{}, error) {
+func (g getter) FindBy(index interface{}, val interface{}) (interface{}, error) {
 	r, err := g.c.Select(g.s, index, 0, 1,
 		tarantool.IterEq, []interface{}{val})
 	if err != nil {
@@ -108,6 +120,6 @@ func (g Getter) FindBy(index interface{}, val interface{}) (interface{}, error) 
 }
 
 // Find a record by ID
-func (g Getter) Find(id string) (interface{}, error) {
+func (g getter) Find(id string) (interface{}, error) {
 	return g.FindBy(consts.PrimaryIndex, id)
 }
