@@ -24,7 +24,9 @@ func model() testModel {
 
 func TestTuple(t *testing.T) {
 	m := model()
-	mut := NewMutation(testSpace, &m, nil)
+	mutRaw := NewMutation(testSpace, &m, nil)
+	mut, ok := mutRaw.(*mutation)
+	assert.True(t, ok)
 	tup, err := mut.tuple()
 	assert.Nil(t, err)
 	assert.Equal(t, testTuple, tup)
@@ -32,6 +34,8 @@ func TestTuple(t *testing.T) {
 
 func TestID(t *testing.T) {
 	m := model()
-	mut := NewMutation(testSpace, &m, nil)
+	mutRaw := NewMutation(testSpace, &m, nil)
+	mut, ok := mutRaw.(*mutation)
+	assert.True(t, ok)
 	assert.Equal(t, testTuple[0], mut.id())
 }

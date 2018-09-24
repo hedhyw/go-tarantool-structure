@@ -15,19 +15,26 @@ import (
 func NewMutation(
 	space string, model interface{},
 	conn db.IConnection,
-) Mutation {
-	return Mutation{space, model, conn}
+) IMutation {
+	return &mutation{space, model, conn}
 }
 
-// Mutation has methods to operate with entity in the database
-type Mutation struct {
+// mutation implements IMutation
+type mutation struct {
 	s string      // space
 	m interface{} // model
 	c db.IConnection
 }
 
+// IMutation has methods to operate with entity in the database
+type IMutation interface {
+	Append() (id string, err error)
+	Update() error
+	Delete() error
+}
+
 // id of the record
-func (m Mutation) id() interface{} {
+func (m mutation) id() interface{} {
 	ref := reflect.TypeOf(m.m).Elem()
 	for i, count := 0, ref.NumField(); i < count; i++ {
 		f := ref.Field(i)
@@ -40,7 +47,7 @@ func (m Mutation) id() interface{} {
 }
 
 // tuple is a raw result
-func (m Mutation) tuple() ([]interface{}, error) {
+func (m mutation) tuple() ([]interface{}, error) {
 	refV := reflect.ValueOf(m.m).Elem()
 	refT := reflect.TypeOf(m.m).Elem()
 	count := refT.NumField()
@@ -65,7 +72,7 @@ func (m Mutation) tuple() ([]interface{}, error) {
 }
 
 // Append adds an entity to the database
-func (m Mutation) Append() (id string, err error) {
+func (m mutation) Append() (id string, err error) {
 	id = uuid.New().String()
 	t, err := m.tuple()
 	if err != nil {
@@ -77,7 +84,7 @@ func (m Mutation) Append() (id string, err error) {
 }
 
 // Update entity with new values
-func (m Mutation) Update() error {
+func (m mutation) Update() error {
 	t, err := m.tuple()
 	if err != nil {
 		return err
@@ -87,7 +94,7 @@ func (m Mutation) Update() error {
 }
 
 // Delete entity
-func (m Mutation) Delete() error {
+func (m mutation) Delete() error {
 	_, err := m.c.Delete(m.s, consts.PrimaryIndex, []interface{}{m.id()})
 	return err
 }
