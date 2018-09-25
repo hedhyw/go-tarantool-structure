@@ -15,6 +15,10 @@ type testModel struct {
 	ID     string `tnt:"0"`
 }
 
+func (testModel) Create() interface{} {
+	return &testModel{}
+}
+
 var testTuple = []interface{}{"CYT2CV0LYQ", int64(15)}
 
 const testSpace = "TestGSpace"

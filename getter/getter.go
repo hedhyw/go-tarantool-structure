@@ -15,14 +15,19 @@ import (
 // InvalidEntityError describes an entity parsing error
 type InvalidEntityError struct{}
 
+// Creator is used for creating new model
+type Creator interface {
+	Create() interface{}
+}
+
 func (e InvalidEntityError) Error() string {
 	return "Invalid entity "
 }
 
 // getter implements Getter
 type getter struct {
-	s string      // space
-	m interface{} // model
+	s string  // space
+	m Creator // model
 	c interfaces.IConnection
 }
 
@@ -41,7 +46,7 @@ type Getter interface {
 // NewGetter wraps a model with a getter methods
 func NewGetter(
 	space string,
-	model interface{},
+	model Creator,
 	conn interfaces.IConnection,
 ) Getter {
 	return &getter{space, model, conn}
@@ -49,8 +54,9 @@ func NewGetter(
 
 // model parses tuple into the model
 func (g getter) model(t []interface{}) (interface{}, error) {
+	var mdl = g.m.Create()
 	var in = map[string]interface{}{}
-	ref := reflect.TypeOf(g.m).Elem()
+	ref := reflect.TypeOf(mdl).Elem()
 
 	// Convert tuple into the map
 	for i, count := 0, ref.NumField(); i < count; i++ {
@@ -66,11 +72,11 @@ func (g getter) model(t []interface{}) (interface{}, error) {
 		in[f.Name] = t[index]
 	}
 
-	if err := mapstructure.Decode(in, g.m); err != nil {
+	if err := mapstructure.Decode(in, mdl); err != nil {
 		return nil, err
 	}
 
-	return g.m, nil
+	return mdl, nil
 }
 
 // All returns records
