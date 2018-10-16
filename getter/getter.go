@@ -89,7 +89,7 @@ func (g getter) All(
 	limit uint32,
 ) ([]interface{}, error) {
 	r, err := g.c.Select(g.s, index, offset, limit,
-		tarantool.IterEq, []interface{}{val})
+		tarantool.IterReq, []interface{}{val})
 	if err != nil {
 		return nil, err
 	}
