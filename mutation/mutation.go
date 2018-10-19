@@ -46,29 +46,52 @@ func (m mutation) id() interface{} {
 	return nil
 }
 
-// tuple is a raw result
-func (m mutation) tuple() ([]interface{}, error) {
-	refV := reflect.ValueOf(m.m).Elem()
-	refT := reflect.TypeOf(m.m).Elem()
+func tupleElements(
+	refV reflect.Value,
+	refT reflect.Type,
+	t *map[int]interface{},
+) (lastIndex int, err error) {
 	count := refT.NumField()
-	t := make([]interface{}, count)
-	lastIndex := 0
 	for i := 0; i < count; i++ {
 		f := refT.Field(i)
-		val, ok := f.Tag.Lookup(consts.TagName)
-		if !ok {
-			continue
-		}
-		index, err := strconv.Atoi(val)
-		if err != nil || index >= count {
-			return nil, errs.NewInvalidTagValueError(f.Name)
+		var index int
+		v := refV.Field(i)
+		if v.Kind() == reflect.Struct {
+			index, err = tupleElements(v, v.Type(), t)
+		} else {
+			val, ok := f.Tag.Lookup(consts.TagName)
+			if !ok {
+				continue
+			}
+			index, err = strconv.Atoi(val)
+			if err != nil {
+				return 0, errs.NewInvalidTagValueError(err.Error())
+			}
+			if refV.Field(i).CanInterface() {
+				(*t)[index] = refV.Field(i).Interface()
+			}
 		}
 		if index > lastIndex {
 			lastIndex = index
 		}
-		t[index] = refV.Field(i).Interface()
 	}
-	return t[:lastIndex+1], nil
+	return
+}
+
+// tuple is a raw result
+func (m mutation) tuple() (tuple []interface{}, err error) {
+	t := make(map[int]interface{})
+	refV := reflect.ValueOf(m.m).Elem()
+	refT := reflect.TypeOf(m.m).Elem()
+	lastIndex, err := tupleElements(refV, refT, &t)
+	if err != nil {
+		return
+	}
+	tuple = make([]interface{}, lastIndex+1)
+	for ind, val := range t {
+		tuple[ind] = val
+	}
+	return tuple, nil
 }
 
 // Append adds an entity to the database
