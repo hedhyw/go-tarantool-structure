@@ -1,5 +1,12 @@
 package getter
 
+/*
+
+		TODO:
+- count() test
+
+*/
+
 import (
 	"testing"
 

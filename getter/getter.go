@@ -2,6 +2,7 @@ package getter
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 
@@ -41,6 +42,7 @@ type Getter interface {
 	) ([]interface{}, error)
 	FindBy(index interface{}, val interface{}) (interface{}, error)
 	Find(id string) (interface{}, error)
+	Count(index, val string) (int, error)
 }
 
 // NewGetter wraps a model with a getter methods
@@ -77,6 +79,20 @@ func (g getter) model(t []interface{}) (interface{}, error) {
 	}
 
 	return mdl, nil
+}
+
+func (g getter) Count(index, val string) (int, error) {
+	funcName := fmt.Sprint("box.space.", g.s, ".index.", index, ":count")
+	resp, err := g.c.Call(
+		funcName,
+		[]interface{}{
+			val,
+			map[string]string{
+				"iterator": "EQ",
+			},
+		})
+	log.Print(resp)
+	return 0, err
 }
 
 // All returns records
